@@ -7,7 +7,8 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write  # 新增PR操作权限
+  pull-requests: write  # 保留PR操作权限
+  issues: read          # gh cli需要的基础权限
 
 jobs:
   fetch-and-pr:
@@ -27,35 +28,36 @@ jobs:
           echo "$(date '+%Y-%m-%d %H:%M:%S')">update_time
 
       - name: Create Pull Request
+        id: create_pr  # 给步骤加ID，方便后续获取PR信息
         uses: peter-evans/create-pull-request@v5
         with:
-          # 提交到专门的临时分支，避免直接操作主分支
           branch: auto-update-stats-images
-          # PR标题
           title: "[Auto] Update stats images $(date '+%Y-%m-%d %H:%M:%S')"
-          # PR描述
           body: |
             This is an auto-generated PR to update the stats card images.
             Updated at: $(date '+%Y-%m-%d %H:%M:%S')
-          # 提交信息
           commit-message: "[Auto] Update stats images $(date '+%Y-%m-%d %H:%M:%S')"
-          # 作者信息
           author: 杨人瑞 <yangrenruiyrr@163.com>
-          # 如果PR已存在，更新它而不是创建新的
           update-existing-pr: true
-          # 自动给PR加标签
           labels: auto-update, stats-images
 
+      - name: Setup GitHub CLI
+        if: steps.create_pr.outputs.pull-request-number != ''  # 只有创建了PR才执行
+        run: |
+          # 安装GitHub CLI（ubuntu-latest默认已安装，但确保版本最新）
+          sudo apt update && sudo apt install gh -y
+
       - name: Merge Pull Request
-        uses: peter-evans/merge-pull-request@v2
-        with:
-          # 要合并的分支（和上面创建的分支一致）
-          pull-request-branch: auto-update-stats-images
-          # 合并方式：squash（将所有提交压缩为一个）
-          merge-method: squash
-          # 合并提交信息
-          commit-message: "[Auto] Merge stats images update $(date '+%Y-%m-%d %H:%M:%S')"
-          # 如果PR已合并/关闭，忽略错误
-          allow-no-pr: true
-          # 合并后删除分支
-          delete-branch: true
+        if: steps.create_pr.outputs.pull-request-number != ''  # 只有存在PR才合并
+        env:
+          PR_NUMBER: ${{ steps.create_pr.outputs.pull-request-number }}
+          GITHUB_TOKEN: ${{ github.token }}  # 使用内置token认证
+        run: |
+          # 认证GitHub CLI
+          gh auth setup-git
+          
+          # 合并PR（squash方式，压缩提交）
+          gh pr merge $PR_NUMBER --squash --delete-branch --title "[Auto] Merge stats images update $(date '+%Y-%m-%d %H:%M:%S')"
+          
+          # 输出合并结果，方便排查
+          echo "PR #$PR_NUMBER merged successfully"
