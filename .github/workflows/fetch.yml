@@ -19,9 +19,9 @@ jobs:
 
       - name: Fetch
         run: |
-          curl "https://github-readme-stats.vercel.app/api?username=yangrenruiyrr&theme=transparent&include_all_commits=true&show_icons=true&bg_color=DEG,FF0000,FFFF00" -Ls -o github-readme-stats_YANGRENRUIYRR.svg
+          curl "https://github-readme-stats-iota-two-28.vercel.app/api?username=yangrenruiyrr&theme=transparent&include_all_commits=true&show_icons=true&bg_color=DEG,FF0000,FFFF00" -Ls -o github-readme-stats_YANGRENRUIYRR.svg
           curl "https://github-readme-activity-graph.vercel.app/graph?username=yangrenruiyrr&theme=github-compact&hide_border=true&area=true" -Ls -o graph_YANGRENRUIYRR.svg
-          curl "https://github-readme-stats.vercel.app/api/top-langs?username=yangrenruiyrr&theme=transparent&include_all_commits=true&show_icons=true&bg_color=DEG,FF0000,FFFF00" -Ls -o top-langs_YANGRENRUIYRR.svg
+          curl "https://github-readme-stats-iota-two-28.vercel.app/api/top-langs?username=yangrenruiyrr&theme=transparent&include_all_commits=true&show_icons=true&bg_color=DEG,FF0000,FFFF00" -Ls -o top-langs_YANGRENRUIYRR.svg
           echo "$(date '+%Y-%m-%d %H:%M:%S')">update_time
           
 
