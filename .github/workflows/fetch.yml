@@ -7,8 +7,8 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write  # 保留PR操作权限
-  issues: read          # gh cli需要的基础权限
+  pull-requests: write
+  issues: read
 
 jobs:
   fetch-and-pr:
@@ -17,6 +17,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PR_MERGE_TOKEN }}  # 使用你的PAT拉取代码，而非默认token
 
       - name: Fetch stats images and update time
         run: |
@@ -27,37 +29,43 @@ jobs:
           # 更新时间戳
           echo "$(date '+%Y-%m-%d %H:%M:%S')">update_time
 
+      - name: Configure git user (your identity)
+        run: |
+          # 配置git使用你的身份，而非github-actions
+          git config --global user.name "杨人瑞"
+          git config --global user.email "yangrenruiyrr@163.com"
+
       - name: Create Pull Request
-        id: create_pr  # 给步骤加ID，方便后续获取PR信息
+        id: create_pr
         uses: peter-evans/create-pull-request@v5
         with:
+          token: ${{ secrets.PR_MERGE_TOKEN }}  # 使用你的PAT创建PR
           branch: auto-update-stats-images
           title: "[Auto] Update stats images $(date '+%Y-%m-%d %H:%M:%S')"
           body: |
             This is an auto-generated PR to update the stats card images.
             Updated at: $(date '+%Y-%m-%d %H:%M:%S')
           commit-message: "[Auto] Update stats images $(date '+%Y-%m-%d %H:%M:%S')"
-          author: 杨人瑞 <yangrenruiyrr@163.com>
+          author: 杨人瑞 <yangrenruiyrr@163.com>  # 确保作者是你
           update-existing-pr: true
           labels: auto-update, stats-images
 
       - name: Setup GitHub CLI
-        if: steps.create_pr.outputs.pull-request-number != ''  # 只有创建了PR才执行
+        if: steps.create_pr.outputs.pull-request-number != ''
         run: |
-          # 安装GitHub CLI（ubuntu-latest默认已安装，但确保版本最新）
           sudo apt update && sudo apt install gh -y
 
-      - name: Merge Pull Request
-        if: steps.create_pr.outputs.pull-request-number != ''  # 只有存在PR才合并
+      - name: Merge Pull Request (your identity)
+        if: steps.create_pr.outputs.pull-request-number != ''
         env:
           PR_NUMBER: ${{ steps.create_pr.outputs.pull-request-number }}
-          GITHUB_TOKEN: ${{ github.token }}  # 使用内置token认证
+          GH_TOKEN: ${{ secrets.PR_MERGE_TOKEN }}  # 使用你的PAT认证gh
         run: |
-          # 认证GitHub CLI
-          gh auth setup-git
+          # 用你的PAT认证GitHub CLI
+          echo $GH_TOKEN | gh auth login --with-token
           
-          # 合并PR（squash方式，压缩提交）
-          gh pr merge $PR_NUMBER --squash --delete-branch --title "[Auto] Merge stats images update $(date '+%Y-%m-%d %H:%M:%S')"
+          # 修正参数：--title → --subject（-t），合并PR
+          gh pr merge $PR_NUMBER --squash --delete-branch -t "[Auto] Merge stats images update $(date '+%Y-%m-%d %H:%M:%S')"
           
-          # 输出合并结果，方便排查
-          echo "PR #$PR_NUMBER merged successfully"
+          # 输出合并结果
+          echo "PR #$PR_NUMBER merged successfully by your identity"
