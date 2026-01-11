@@ -1,38 +1,61 @@
-name: Fetch
+name: Fetch and Create PR
 
 on:
   schedule:
     - cron: "*/5 * * * *"
-
   workflow_dispatch:
 
 permissions:
   contents: write
+  pull-requests: write  # 新增PR操作权限
 
 jobs:
-  fetch:
-    name: Fetch stats card img
+  fetch-and-pr:
+    name: Fetch stats card img and create PR
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Fetch
+      - name: Fetch stats images and update time
         run: |
+          # 拉取统计图片
           curl "https://github-readme-stats-iota-two-28.vercel.app/api?username=yangrenruiyrr&theme=transparent&include_all_commits=true&show_icons=true&bg_color=DEG,FF0000,FFFF00" -Ls -o github-readme-stats_YANGRENRUIYRR.svg
           curl "https://github-readme-activity-graph-five-sigma.vercel.app/graph?username=yangrenruiyrr&theme=github-compact&hide_border=true&area=true" -Ls -o graph_YANGRENRUIYRR.svg
           curl "https://github-readme-stats-iota-two-28.vercel.app/api/top-langs?username=yangrenruiyrr&theme=transparent&include_all_commits=true&show_icons=true&bg_color=DEG,FF0000,FFFF00" -Ls -o top-langs_YANGRENRUIYRR.svg
+          # 更新时间戳
           echo "$(date '+%Y-%m-%d %H:%M:%S')">update_time
-          
 
-      - name: Commit & Push
-        run: |
-          git config --global user.name 杨人瑞
-          git config --global user.email yangrenruiyrr@163.com
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          # 提交到专门的临时分支，避免直接操作主分支
+          branch: auto-update-stats-images
+          # PR标题
+          title: "[Auto] Update stats images $(date '+%Y-%m-%d %H:%M:%S')"
+          # PR描述
+          body: |
+            This is an auto-generated PR to update the stats card images.
+            Updated at: $(date '+%Y-%m-%d %H:%M:%S')
+          # 提交信息
+          commit-message: "[Auto] Update stats images $(date '+%Y-%m-%d %H:%M:%S')"
+          # 作者信息
+          author: 杨人瑞 <yangrenruiyrr@163.com>
+          # 如果PR已存在，更新它而不是创建新的
+          update-existing-pr: true
+          # 自动给PR加标签
+          labels: auto-update, stats-images
 
-          git add .
-
-          git commit -m "[${{ github.workflow }}] Upload on $(date '+%Y-%m-%d %H:%M:%S')" || echo 1
-
-          git push
-          git push # Attempt
+      - name: Merge Pull Request
+        uses: peter-evans/merge-pull-request@v2
+        with:
+          # 要合并的分支（和上面创建的分支一致）
+          pull-request-branch: auto-update-stats-images
+          # 合并方式：squash（将所有提交压缩为一个）
+          merge-method: squash
+          # 合并提交信息
+          commit-message: "[Auto] Merge stats images update $(date '+%Y-%m-%d %H:%M:%S')"
+          # 如果PR已合并/关闭，忽略错误
+          allow-no-pr: true
+          # 合并后删除分支
+          delete-branch: true
