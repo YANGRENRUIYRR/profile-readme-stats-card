@@ -68,9 +68,9 @@ jobs:
           # 2. 静默认证（屏蔽所有提示，重定向输出）
           echo "$PAT_TOKEN" | gh auth login --with-token > /dev/null 2>&1
 
-          # 3. 打印PR详细状态（关键：排查合并失败原因）
+          # 3. 打印PR详细状态（修复jq表达式语法错误！）
           echo "=== PR #$PR_NUMBER Status ==="
-          gh pr view $PR_NUMBER --json state,title,mergeable,mergeStateStatus -q '.{"state": .state, "mergeable": .mergeable, "mergeState": .mergeStateStatus}'
+          gh pr view $PR_NUMBER --json state,title,mergeable,mergeStateStatus -q '{state: .state, mergeable: .mergeable, mergeState: .mergeStateStatus}'
 
           # 4. 仅合并OPEN状态的PR
           PR_STATE=$(gh pr view $PR_NUMBER --json state -q '.state')
