@@ -41,16 +41,20 @@ jobs:
           git config --global user.name "杨人瑞"
           git config --global user.email "yangrenruiyrr@163.com"
 
-      # 新增：自动创建 Issue，用于关联 PR
+      # ✅ 修复：正确创建 Issue（先写入临时文件）
+      - name: Prepare issue content
+        run: |
+          echo "自动化任务：更新 GitHub 统计卡片图片" > issue.md
+          echo "" >> issue.md
+          echo "更新时间：$(date '+%Y-%m-%d %H:%M:%S')" >> issue.md
+          echo "由 GitHub Actions 自动创建，完成后自动关闭" >> issue.md
+
       - name: Create Auto Update Issue
         id: create_issue
         uses: peter-evans/create-issue-from-file@v4
         with:
           title: "[Auto] 自动更新统计图片任务 $(date '+%Y-%m-%d %H:%M:%S')"
-          content: |
-            自动化任务：更新 GitHub 统计卡片图片
-            更新时间：$(date '+%Y-%m-%d %H:%M:%S')
-            由 GitHub Actions 自动创建，完成后自动关闭
+          content-filepath: ./issue.md
           labels: auto-update, stats-images
           token: ${{ secrets.PR_MERGE_TOKEN }}
 
@@ -60,7 +64,6 @@ jobs:
         with:
           token: ${{ secrets.PR_MERGE_TOKEN }}
           branch: auto-update-stats-images
-          # PR 标题直接关联 Issue
           title: "[Auto] Update stats images & Close #${{ steps.create_issue.outputs.issue-number }} $(date '+%Y-%m-%d %H:%M:%S')"
           body: |
             This is an auto-generated PR to update the stats card images.
@@ -73,14 +76,17 @@ jobs:
           update-existing-pr: true
           labels: auto-update, stats-images
 
-      - name: Merge PR & Auto Close Issue
+      - name: Merge PR & Close Issue
         if: steps.create_pr.outputs.pull-request-number != ''
         env:
           PR_NUMBER: ${{ steps.create_pr.outputs.pull-request-number }}
           ISSUE_NUMBER: ${{ steps.create_issue.outputs.issue-number }}
           PAT_TOKEN: ${{ secrets.PR_MERGE_TOKEN }}
         run: |
-          sudo apt update && sudo apt install gh -y
+          # 静默安装 gh，屏蔽警告
+          sudo apt update -qq > /dev/null 2>&1
+          sudo apt install gh -y -qq > /dev/null 2>&1
+          
           echo "$PAT_TOKEN" | gh auth login --with-token > /dev/null 2>&1
 
           # 检查 PR 状态
@@ -99,10 +105,10 @@ jobs:
             --admin \
             > /dev/null 2>&1
 
-          # 自动关闭关联的 Issue
+          # 关闭 Issue
           echo "Closing Issue #$ISSUE_NUMBER..."
           gh issue close $ISSUE_NUMBER --reason "completed" > /dev/null 2>&1
 
-          # 输出结果
-          echo "✅ PR #$PR_NUMBER merged successfully"
-          echo "✅ Issue #$ISSUE_NUMBER closed automatically"
+          echo "✅ 执行成功"
+          echo "PR #$PR_NUMBER 已合并"
+          echo "Issue #$ISSUE_NUMBER 已关闭"
