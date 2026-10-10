@@ -19,15 +19,15 @@ jobs:
 
       - name: Fetch
         run: |
-          curl "https://github-readme-stats-bs.vercel.app/api/?username=renbaoshuo&show_icons=true&include_all_commits=true&count_private=true&hide_title=true&disable_animations=true&text_color=24292f&icon_color=57606a&bg_color=ffffff&border_color=d0d7de&rank_icon=percentile&show=reviews,discussions_answered&hide=contribs" -Ls -o github-readme-stats_renbaoshuo.light.svg
-          curl "https://github-readme-stats-bs.vercel.app/api/?username=renbaoshuo&show_icons=true&include_all_commits=true&count_private=true&hide_title=true&disable_animations=true&text_color=c9d1d9&icon_color=8b949e&bg_color=0d1117&border_color=30363d&rank_icon=percentile&show=reviews,discussions_answered&hide=contribs" -Ls -o github-readme-stats_renbaoshuo.dark.svg
+          curl "https://github-readme-stats-bs.vercel.app/api/?username=yangrenruiyrr&show_icons=true&include_all_commits=true&count_private=true&hide_title=true&disable_animations=true&text_color=24292f&icon_color=57606a&bg_color=ffffff&border_color=d0d7de&rank_icon=percentile&show=reviews,discussions_answered&hide=contribs" -Ls -o github-readme-stats_yangrenruiyrr.light.svg
+          curl "https://github-readme-stats-bs.vercel.app/api/?username=yangrenruiyrr&show_icons=true&include_all_commits=true&count_private=true&hide_title=true&disable_animations=true&text_color=c9d1d9&icon_color=8b949e&bg_color=0d1117&border_color=30363d&rank_icon=percentile&show=reviews,discussions_answered&hide=contribs" -Ls -o github-readme-stats_yangrenruiyrr.dark.svg
 
       - name: Commit & Push
         run: |
-          git config --global user.name BaoshuoBot
-          git config --global user.email bot@baoshuo.dev
+          git config --global user.name YANGRENRUIYRR
+          git config --global user.email yangrenruiyrr@yeah.net
 
-          git add github-readme-stats_renbaoshuo.light.svg github-readme-stats_renbaoshuo.dark.svg
+          git add github-readme-stats_yangrenruiyrr.light.svg github-readme-stats_yangrenruiyrr.dark.svg
 
           git commit -m "[${{ github.workflow }}] Upload on $(date '+%Y-%m-%d %H:%M:%S')" || echo 1
 
